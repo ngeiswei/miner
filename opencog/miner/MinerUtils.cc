@@ -22,6 +22,7 @@
  */
 
 #include "MinerUtils.h"
+#include "MinerLogger.h"
 
 #include <opencog/util/dorepeat.h>
 #include <opencog/util/random.h>
@@ -485,21 +486,44 @@ HandleSet MinerUtils::shallow_specialize(const Handle& pattern,
                                          bool type_check,
                                          bool glob_support)
 {
+	LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize(pattern="
+							  << oc_to_string(pattern)
+							  << ", db.size()=" << db.size()
+							  << ", ms=" << ms
+							  << ", mv=" << mv << ")";
+
 	// Calculate all shallow abstractions of pattern
 	HandleSetSeq shabs_per_var =
 			shallow_abstract(pattern, db, ms, type_check, glob_support);
+	LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize shabs_per_var = "
+							  << oc_to_string(shabs_per_var);
 
 	// For each variable of pattern, generate the corresponding shallow
 	// specializations
 	const Variables& vars = MinerUtils::get_variables(pattern);
+	LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize vars = "
+							  << oc_to_string(vars);
 	size_t vari = 0;
 	HandleSet results;
 	for (const HandleSet& shabs : shabs_per_var) {
+		LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize shabs = "
+								  << oc_to_string(shabs);
 		for (const Handle& sa : shabs) {
+			LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize vars.varseq["
+									  << vari << "] = " << oc_to_string(vars.varseq[vari]);
+			LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize sa = "
+									  << oc_to_string(sa);
 			Handle npat = MinerUtils::compose_nocheck(pattern, {vars.varseq[vari], sa});
-			if (mv < get_variables(npat).size())
-				continue;
+			LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize npat = "
+									  << oc_to_string(npat);
 
+			if (mv < get_variables(npat).size()) {
+				LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize not enough variables :-(";
+				continue;
+			}
+
+			LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize enough variables :-)";
+			
 			// Set the count of npat, stored in its shallow abstraction
 			set_support(npat, get_support(sa));
 			// Shallow_abstract should already have eliminated shallow
@@ -508,6 +532,10 @@ HandleSet MinerUtils::shallow_specialize(const Handle& pattern,
 		}
 		vari++;
 	}
+
+	LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize results = "
+							  << oc_to_string(results);
+
 	return results;
 }
 
