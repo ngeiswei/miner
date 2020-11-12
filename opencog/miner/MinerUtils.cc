@@ -508,6 +508,10 @@ HandleSet MinerUtils::shallow_specialize(const Handle& pattern,
 	for (const HandleSet& shabs : shabs_per_var) {
 		LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize shabs = "
 								  << oc_to_string(shabs);
+		if (vars.varseq[vari]->get_name() == "$T") {
+			// TMP: skip temporal variable
+			goto skip_specialization;
+		}
 		for (const Handle& sa : shabs) {
 			LAZY_MINER_LOG_FINE << "MinerUtils::shallow_specialize vars.varseq["
 									  << vari << "] = " << oc_to_string(vars.varseq[vari]);
@@ -530,6 +534,7 @@ HandleSet MinerUtils::shallow_specialize(const Handle& pattern,
 			// abstraction that do not have enough support.
 			results.insert(npat);
 		}
+		skip_specialization:
 		vari++;
 	}
 
